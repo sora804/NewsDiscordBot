@@ -1,35 +1,37 @@
 package fetch
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 )
 
 /*
-https://zenn.dev/feedのみをfetchする
+あとで時間の範囲指定する
+handler側でURL＝https://zenn.dev/feed
 */
 
 /*
-zenn.devのRSSを取得する関数
+引数のurlのRSSを取得する関数
 @param url RSSフィードのURL
 @return RSSフィードの内容を文字列で返す
 */
-
-// 時間の範囲指定するかも
-func getRSS(url string) string {
-	rss := getRSS("https://zenn.dev/feed")
-	fmt.Println(rss)
-	resp, err := http.Get("https://zenn.dev/feed")
+func FetchRSS(url string) (string, error) {
+	//rss := getRSS("https://zenn.dev/feed")
+	//fmt.Println(rss)
+	resp, err := http.Get(url)
 	if err != nil {
 		// エラーハンドリングを書く
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	// _を使うことでエラーを無視できる
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
-	return string(body)
+	return string(body), nil
 }
 
 /*

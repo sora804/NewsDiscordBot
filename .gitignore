@@ -1,0 +1,45 @@
+# ===== 秘密情報(最重要) =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+secrets.*
+config.local.*
+
+# ===== データベース(実データ) =====
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ===== Goのビルド成果物 =====
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.*
+bin/
+tmp/
+
+# ===== ログ =====
+*.log
+
+# ===== Go workspace(個人環境依存) =====
+go.work
+go.work.sum
+
+# ===== エディタ・OS =====
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

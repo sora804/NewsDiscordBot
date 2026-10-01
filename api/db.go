@@ -9,14 +9,16 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type DB interface {
+/*
+type DBFunc interface {
 	//funcまとめる
 	//ここやばいかも
 	CreateDB()
-	RegisterInfo()
+	RegisterInfo(info string)
 	Get()
 	HardDelete()
 }
+*/
 
 type Article struct {
 	Id          string
@@ -25,14 +27,148 @@ type Article struct {
 	UpdatedTime string
 }
 
+//「--------------------------------------------------------
 /*
-５分おきに自動登録
-*/
-func (a Article) CreateDB() {
-	// DB接続
-	db, err := sql.Open("sqlite3", "database/article.db")
+func DBInit() {
+	os.Remove("./articles.db")
+
+	db, err := sql.Open("sqlite3", "./articles.db")
 	if err != nil {
 		log.Fatal(err)
+	}
+	defer db.Close()
+
+	sqlStmt := `
+	create table Articles (id integer not null primary key, articles text, updated_time text);
+	delete from Articles;
+	`
+	_, err = db.Exec(sqlStmt)
+	if err != nil {
+		log.Printf("%q: %s\n", err, sqlStmt)
+		return
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// todo:ここから続きコードリーディング
+	stmt, err := tx.Prepare("insert into Articles(id, articles, updated_time) values(?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+	for i := 0; i < 100; i++ {
+		_, err = stmt.Exec(i, fmt.Sprintf("こんにちは世界%03d", i), time.Now().Format(time.RFC3339))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows, err := db.Query("select id, articles, updated_time from Articles")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var articles string
+		var updatedTime string
+		err = rows.Scan(&id, &articles, &updatedTime)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(id, articles, updatedTime)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stmt, err = db.Prepare("select articles from Articles where id = ?")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+	var articles string
+	err = stmt.QueryRow("3").Scan(&articles)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(articles)
+
+	_, err = db.Exec("delete from Articles")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec("insert into Articles(id, articles, updated_time) values(1, 'foo', ?), (2, 'bar', ?), (3, 'baz', ?)", time.Now().Format(time.RFC3339), time.Now().Format(time.RFC3339), time.Now().Format(time.RFC3339))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows, err = db.Query("select id, articles, updated_time from Articles")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var articles string
+		var updatedTime string
+		err = rows.Scan(&id, &articles, &updatedTime)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(id, articles, updatedTime)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+*/
+
+/*
+type DB interface {
+	RegisterInfo(s string) error
+}
+
+type sqliteDB struct{ conn *sql.DB }
+
+
+// DB初期化処理を書く
+// もしテーブルがなければ
+// 引数要らなくね？
+func DBinit(path string) (DB, error) {
+	conn, err := sql.Open("sqlite", path) // ① 接続を開く
+	if err != nil {
+		return DB{}, err
+	}
+	if err := conn.Ping(); err != nil { // ② 疎通確認
+		return DB{}, err
+	}
+	_, err = conn.Exec(`CREATE TABLE IF NOT EXISTS articles (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		title TEXT,
+		url TEXT UNIQUE
+	)`) // ③ テーブル作成
+	if err != nil {
+		return DB{}, err
+	}
+	return DB{conn: conn}, nil
+}
+*/
+
+func DBinit() (string, error) {
+	// DB接続
+	db, err := sql.Open("sqlite3", "database/Articles.db")
+	if err != nil {
+		return "", err
 	}
 	defer db.Close()
 
@@ -41,26 +177,29 @@ func (a Article) CreateDB() {
 		コードかSQLか
 	*/
 	_, err = db.Exec(`
-        CREATE TABLE IF NOT EXISTS articles (
-            id           TEXT PRIMARY KEY,
-            title        TEXT NOT NULL,
-            url          TEXT NOT NULL,
+        CREATE TABLE IF NOT EXISTS Articles (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            articles     TEXT NOT NULL,
             updated_time TEXT
         )
     `)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
+	return "OK", nil //、旦これ
 }
 
 /*
+５分おきに自動登録
+
 insert db もらう、登録
 */
-func RegisterInfo() {
+//引数変えた
+func RegisterInfo(info string) {
 	//ここはルーティングからのinfoとからむかな～
 
-	db, err := sql.Open("sqlite3", "database/article.db")
+	db, err := sql.Open("sqlite3", "database/Articles.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,8 +209,8 @@ func RegisterInfo() {
 		下は変数名にする
 	*/
 	_, err = db.Exec(
-		"INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
-		"田中太郎", "taro@example.com", 27,
+		"INSERT INTO Articles (id, articles, updated_time) VALUES (?, ?, ?)",
+		"1", info, time.Now().Format(time.RFC3339),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -81,9 +220,9 @@ func RegisterInfo() {
 /*
 httpでrequestがあればデータを取得する
 */
-func Get() {
+func GetData() (string, error) {
 	//dbアクセス
-	db, err := sql.Open("sqlite3", "database/article.db")
+	db, err := sql.Open("sqlite3", "database/Articles.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -94,7 +233,7 @@ func Get() {
 	log.Println("現在時刻:", now)
 
 	// SELECT（24時間以内）
-	rows, err := db.Query("SELECT id, title, url, updated_time FROM articles WHERE updated_time >= ?", now.Add(-24*time.Hour))
+	rows, err := db.Query("SELECT id, title, url, updated_time FROM Articles WHERE updated_time >= ?", now.Add(-24*time.Hour))
 	/*
 		上やばいよ、
 		コードかSQLか
@@ -110,13 +249,14 @@ func Get() {
 		rows.Scan(&id, &title, &url, &updatedTime)
 		fmt.Printf("ID:%s Title:%s URL:%s UpdatedTime:%s\n", id, title, url, updatedTime)
 	}
+	return "", err
 }
 
 /*
 １日おきに自動で４８時間以前をを削除する
 */
 func HardDelete() {
-	db, err := sql.Open("sqlite3", "database/article.db")
+	db, err := sql.Open("sqlite3", "database/Articles.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -129,7 +269,7 @@ func HardDelete() {
 	now := time.Now()
 	fmt.Println("現在時刻:", now)
 
-	db.Exec("DELETE FROM articles WHERE updated_time <= ?", now.Add(-72*time.Hour))
+	db.Exec("DELETE FROM Articles WHERE updated_time <= ?", now.Add(-72*time.Hour))
 
 	fmt.Println("完了")
 }
