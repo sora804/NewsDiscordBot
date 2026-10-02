@@ -5,3 +5,6 @@ func ParseRSS(rss string) string {
 	// ここはあとでやる
 	return rss
 }
+
+//データの型、jsonとか
+//RSSとSQLiteのデータ型

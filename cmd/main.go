@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"newsSite/api"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
@@ -34,15 +36,14 @@ func main() {
 	token := os.Getenv("DISCORD_TOKEN")
 
 	// DB初期化と情報登録の処理
-
-	_, err := api.DBinit()
+	err := api.DBinit()
 	if err != nil {
 		log.Fatal(err)
 	}
 	api.RegisterRSS_Handler() //これは時間駆動にする
 	// ここでエラーハンドリングを追加
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	/*------------------------------------------------
@@ -55,7 +56,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	discord.AddHandler(api.GetData) //時間駆動に関係ありそ
+	//discord.AddHandler(api.GetData) //メッセージ受信時に呼ぶFunc
 
 	err = discord.Open()
 
@@ -68,6 +69,28 @@ func main() {
 	err = discord.Close()
 
 	//return
+
+	/*------------------------------------------------------
+	----time処理------------------------------------
+	------------------------------------------------*/
+	//now := time.Now()
+	//log.Println("Current time:", now)
+
+	log.SetFlags(log.Lmicroseconds)
+	ticker := time.NewTicker(time.Minute * 10)
+	defer ticker.Stop()
+	count := 0
+	for {
+		select {
+		case <-ticker.C:
+			log.Printf("count=%d\n", count)
+			count++
+			api.GetRSS_Handler() //
+		case <-stopBot:
+			log.Print("stop")
+			return
+		}
+	}
 
 }
 

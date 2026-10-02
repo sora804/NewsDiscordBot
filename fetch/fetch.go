@@ -1,6 +1,7 @@
 package fetch
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -16,18 +17,18 @@ handler側でURL＝https://zenn.dev/feed
 @return RSSフィードの内容を文字列で返す
 */
 func FetchRSS(url string) (string, error) {
-	//rss := getRSS("https://zenn.dev/feed")
-	//fmt.Println(rss)
+	//RSSで取ってくる
 	resp, err := http.Get(url)
 	if err != nil {
-		// エラーハンドリングを書く
+		fmt.Println("Failed to fetch RSS:", err)
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	// _を使うことでエラーを無視できる
+	// 読み込んだRSSのbodyを文字列として返す
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		fmt.Println("Failed to read RSS body:", err)
 		return "", err
 	}
 

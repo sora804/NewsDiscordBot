@@ -6,7 +6,8 @@ import (
 	"log"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	//	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 /*
@@ -164,11 +165,12 @@ func DBinit(path string) (DB, error) {
 }
 */
 
-func DBinit() (string, error) {
+func DBinit() error {
 	// DB接続
-	db, err := sql.Open("sqlite3", "database/Articles.db")
+	db, err := sql.Open("sqlite", "database/Articles.db")
 	if err != nil {
-		return "", err
+		fmt.Println("Failed to open DB:", err)
+		return err
 	}
 	defer db.Close()
 
@@ -184,10 +186,11 @@ func DBinit() (string, error) {
         )
     `)
 	if err != nil {
-		return "", err
+		fmt.Println("Failed to create table:", err)
+		return err
 	}
 
-	return "OK", nil //、旦これ
+	return nil //、旦これ
 }
 
 /*
@@ -199,21 +202,33 @@ insert db もらう、登録
 func RegisterInfo(info string) {
 	//ここはルーティングからのinfoとからむかな～
 
-	db, err := sql.Open("sqlite3", "database/Articles.db")
+	db, err := sql.Open("sqlite", "database/Articles.db")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Failed to open database")
 	}
 	defer db.Close()
 
 	/*
 		下は変数名にする
 	*/
-	_, err = db.Exec(
+	res, err := db.Exec(
 		"INSERT INTO Articles (id, articles, updated_time) VALUES (?, ?, ?)",
 		"1", info, time.Now().Format(time.RFC3339),
 	)
+
+	n, err := res.RowsAffected() //新規登録した行の数
 	if err != nil {
-		log.Fatal(err)
+		log.Println("rows affected:", err)
+		return
+	}
+
+	if n == 0 {
+		log.Println("同じidが既にあるためスキップ")
+		return
+	}
+
+	if err != nil {
+		fmt.Println("Failed to insert into DB")
 	}
 }
 
@@ -222,7 +237,7 @@ httpでrequestがあればデータを取得する
 */
 func GetData() (string, error) {
 	//dbアクセス
-	db, err := sql.Open("sqlite3", "database/Articles.db")
+	db, err := sql.Open("sqlite", "database/Articles.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -253,10 +268,9 @@ func GetData() (string, error) {
 }
 
 /*
-１日おきに自動で４８時間以前をを削除する
-*/
+//１日おきに自動で４８時間以前をを削除する
 func HardDelete() {
-	db, err := sql.Open("sqlite3", "database/Articles.db")
+	db, err := sql.Open("sqlite", "database/Articles.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -273,3 +287,4 @@ func HardDelete() {
 
 	fmt.Println("完了")
 }
+*/

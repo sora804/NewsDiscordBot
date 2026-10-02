@@ -35,8 +35,8 @@ func RegisterRSS_Handler() string {
 
 	//dbに保存する関数呼び出し
 	//DB, err := DBinit("database/Articles.db")
-	DB, err := DBinit()
-	if DB != "OK" || err != nil {
+	err = DBinit()
+	if err != nil {
 		log.Fatal(err)
 	}
 	RegisterInfo(parsedRSS)
