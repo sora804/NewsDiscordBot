@@ -1,4 +1,4 @@
-package fetch
+package api
 
 import (
 	"fmt"
@@ -10,6 +10,8 @@ import (
 あとで時間の範囲指定する
 handler側でURL＝https://zenn.dev/feed
 */
+
+//FetchRSS関数をArticle型で返すようにする
 
 /*
 引数のurlのRSSを取得する関数

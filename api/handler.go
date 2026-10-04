@@ -2,8 +2,6 @@ package api
 
 import (
 	"fmt"
-	"log"
-	"newsSite/fetch"
 )
 
 /*
@@ -12,22 +10,17 @@ dbテーブルを作成
 */
 
 /*
-Todo
-・エラーハンドリングの追加
-*/
-
-/*
 zenn.devのRSSを取得してDBに登録するハンドラー処理
 url代入とfetch側の関数呼び出し
 あと、この関数を呼び出すのをどっかで
 */
-func RegisterRSS_Handler() string {
+func RegisterInfo_Handler() error {
 	//fetch部分
 	url := "https://zenn.dev/feed"
-	rss, err := fetch.FetchRSS(url)
+	rss, err := FetchRSS(url)
 	if err != nil {
-		log.Println("failed to fetch RSS")
-		log.Fatal(err)
+		fmt.Println("failed to fetch RSS")
+		return err
 	}
 
 	//パース部分
@@ -37,30 +30,46 @@ func RegisterRSS_Handler() string {
 	//DB, err := DBinit("database/Articles.db")
 	err = DBinit()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("DBinit handler failed:", err)
+		return err
 	}
-	RegisterInfo(parsedRSS)
+	err = InsertInfo(parsedRSS)
+	if err != nil {
+		fmt.Println("InsertInfo handler failed:", err)
+		return err
+	}
 	//上直す
 
-	return parsedRSS
+	return nil
 }
 
 /*
 データ取得
-@return string, error
+@return Article, error
 */
-func GetRSS_Handler() (string, error) {
+func GetData_Handler() (Article, error) {
+	//DBからデータ取得
 	info, err := GetData()
+	if err != nil {
+		fmt.Printf("failed to get Data: %v", err)
+		return Article{}, err
+	}
 
 	//登録されてなければ登録せよ
-	if info == "" {
+	if info.Id == "" {
 		// zennから登録
-		RegisterRSS_Handler()
+		err = RegisterInfo_Handler()
+		if err != nil {
+			fmt.Printf("failed to register Info: %v", err)
+			return Article{}, err
+		}
+		// 再度データ取得
+		info, err = GetData()
+		if err != nil {
+			fmt.Printf("failed to get Data after Re-registering RSS: %v", err)
+			return Article{}, err
+		}
 	}
 
-	if err != nil {
-		fmt.Errorf("failed to get RSS: %v", err)
-		return "", err
-	}
 	return info, nil
 }

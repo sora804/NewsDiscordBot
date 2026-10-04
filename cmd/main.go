@@ -40,10 +40,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	api.RegisterRSS_Handler() //これは時間駆動にする
+	err = api.RegisterInfo_Handler() //これは時間駆動にする
 	// ここでエラーハンドリングを追加
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("RegisterInfo_Handler failed:", err)
 	}
 
 	/*------------------------------------------------
@@ -85,7 +85,7 @@ func main() {
 		case <-ticker.C:
 			log.Printf("count=%d\n", count)
 			count++
-			api.GetRSS_Handler() //
+			api.GetData_Handler() //
 		case <-stopBot:
 			log.Print("stop")
 			return
