@@ -35,8 +35,8 @@ func TestFetchRSS_Success(t *testing.T) {
 			defer srv.Close()
 
 			got, _ := FetchRSS(srv.URL)
-			if got != tt.body {
-				t.Errorf("FetchRSS() = %q, want %q", got, tt.body)
+			if string(got) != tt.body {
+				t.Errorf("FetchRSS() = %q, want %q", string(got), tt.body)
 			}
 		})
 	}
@@ -72,8 +72,8 @@ func TestFetchRSS_ConnectionError(t *testing.T) {
 	}()
 
 	got, _ := FetchRSS(url)
-	if got != "" {
-		t.Errorf("FetchRSS() = %q, want empty string", got)
+	if string(got) != "" {
+		t.Errorf("FetchRSS() = %q, want empty string", string(got))
 	}
 }
 
@@ -105,8 +105,8 @@ func TestFetchRSS(t *testing.T) {
 				t.Fatal("FetchRSS() succeeded unexpectedly")
 			}
 			// TODO: update the condition below to compare got with tt.want.
-			if true {
-				t.Errorf("FetchRSS() = %v, want %v", got, tt.want)
+			if string(got) != tt.want {
+				t.Errorf("FetchRSS() = %v, want %v", string(got), tt.want)
 			}
 		})
 	}

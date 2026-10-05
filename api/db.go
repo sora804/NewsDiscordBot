@@ -45,7 +45,6 @@ func DBinit() error {
 
 insert db もらう、登録
 */
-//引数変えた
 func InsertInfo(info Article) error {
 	//DB接続
 	db, err := sql.Open("sqlite", DBPath)
@@ -55,9 +54,18 @@ func InsertInfo(info Article) error {
 	}
 	defer db.Close()
 
-	// INSERTする値チェック
-	if info.Id == "" || info.Title == "" || info.Url == "" || info.UpdatedTime == "" {
-		return errors.New("empty field error")
+	// 空フィールドがないかチェック
+	if info.Id == "" {
+		return errors.New("db:article-id has empty field ; error")
+	}
+	if info.Title == "" {
+		return errors.New("db:article-title has empty field ; error")
+	}
+	if info.Url == "" {
+		return errors.New("db:article-url has empty field ; error")
+	}
+	if info.UpdatedTime == "" {
+		return errors.New("db:article-updated_time has empty field ; error")
 	}
 
 	//INSERT

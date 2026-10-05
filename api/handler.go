@@ -5,40 +5,39 @@ import (
 )
 
 /*
-dbテーブルを作成
-これはmainが呼び出す、毎回やるのかな？
-*/
-
-/*
 zenn.devのRSSを取得してDBに登録するハンドラー処理
-url代入とfetch側の関数呼び出し
-あと、この関数を呼び出すのをどっかで
 */
 func RegisterInfo_Handler() error {
 	//fetch部分
 	url := "https://zenn.dev/feed"
-	rss, err := FetchRSS(url)
+	byteData, err := FetchRSS(url)
 	if err != nil {
 		fmt.Println("failed to fetch RSS")
 		return err
 	}
 
 	//パース部分
-	parsedRSS := ParseRSS(rss)
+	parsedData, err := (&Article{}).ParseRSS(byteData)
+	if err != nil {
+		fmt.Println("failed to parse RSS")
+		return err
+	}
 
 	//dbに保存する関数呼び出し
 	//DB, err := DBinit("database/Articles.db")
+	//初めだけ
 	err = DBinit()
 	if err != nil {
 		fmt.Println("DBinit handler failed:", err)
 		return err
 	}
-	err = InsertInfo(parsedRSS)
+
+	//データ登録
+	err = InsertInfo(parsedData)
 	if err != nil {
 		fmt.Println("InsertInfo handler failed:", err)
 		return err
 	}
-	//上直す
 
 	return nil
 }

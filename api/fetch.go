@@ -18,12 +18,12 @@ handler側でURL＝https://zenn.dev/feed
 @param url RSSフィードのURL
 @return RSSフィードの内容を文字列で返す
 */
-func FetchRSS(url string) (string, error) {
+func FetchRSS(url string) ([]byte, error) {
 	//RSSで取ってくる
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println("Failed to fetch RSS:", err)
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -31,10 +31,10 @@ func FetchRSS(url string) (string, error) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Failed to read RSS body:", err)
-		return "", err
+		return nil, err
 	}
 
-	return string(body), nil
+	return body, nil
 }
 
 /*

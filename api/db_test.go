@@ -8,6 +8,8 @@ import (
 )
 
 func TestDBinit_Success(t *testing.T) {
+	// テスト用DBのパスを設定
+	api.DBPath = filepath.Join(t.TempDir(), "test.db")
 	tests := []struct {
 		name    string // description of this test case
 		wantErr bool
