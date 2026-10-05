@@ -54,7 +54,7 @@ func GetData_Handler() (Article, error) {
 		return Article{}, err
 	}
 
-	//登録されてなければ登録せよ
+	//1件もなければ登録せよ
 	if info.Id == "" {
 		// zennから登録
 		err = RegisterInfo_Handler()
@@ -62,6 +62,7 @@ func GetData_Handler() (Article, error) {
 			fmt.Printf("failed to register Info: %v", err)
 			return Article{}, err
 		}
+
 		// 再度データ取得
 		info, err = GetData()
 		if err != nil {
